@@ -1,3 +1,6 @@
+What started as a fork is now a complete rewrite. Naturally.
+
+
 gym-tetris
 ******
 
