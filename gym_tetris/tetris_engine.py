@@ -198,33 +198,42 @@ class TetrisBoard(object):
         # self.move = NoMove
         self.rot_iter = 0
         self.forcedmove = forcedmove
+        self.gameover = False
 
         # self.update()
 
-    def isinbounds(self,point):
+    def isinbounds(self,points):
         # Really? Cool.
-        # return 0 <= x < self.board.shape[0] and 0 <= y < self.board.shape[1]
+        for x,y in points:
+            if not (0 <= x < self.board.shape[0] and 0 <= y < self.board.shape[1] and self.board[x,y] == 0):
+                return False
+        return True
         # Slightly cooler:
-        return (np.array([0,0]) <= point) * (point < self.board.shape)
+        # return (np.array([0,0]) <= point) * (point < self.board.shape)
 
     def newpiece(self):
         piece = np.random.choice(np.arange(len(TetrisPiece.pieces)))
         self.activepiece = TetrisPiece(piece)
+        if not self.isinbounds(self.activepiece.points.T):
+            # Waa-wahh
+            self.gameover = True
+            print("You lose!")
         # self.rot_iter = 0
 
     def movepiece(self, move):
         # print("MOVE: {}".format(move))
-        translation = np.array([[0],[0]])
-        rotation = 0
+        # translation = np.array([[0],[0]])
+        # rotation = 0
         oldpoints = self.activepiece.points
         lockpiece = False
+        self.board[oldpoints[0,:],oldpoints[1,:]] = 0
         for i, bit in enumerate(move):
             # print(bit)
             # print(moveList[i].translation)
             # print(bit * moveList[i].translation)
             self.activepiece.translation += bit * moveList[i].translation
             self.activepiece.rotation += bit * moveList[i].rotation
-            if not self.isinbounds(self.activepiece.points.T).all():
+            if not self.isinbounds(self.activepiece.points.T):
                 if i == self.forcedmove:
                     lockpiece = True
                 self.activepiece.translation -= bit * moveList[i].translation
@@ -232,7 +241,6 @@ class TetrisBoard(object):
             # print(translation, rotation)
         # print(oldpoints)
         # Erase piece
-        self.board[oldpoints[0,:],oldpoints[1,:]] = 0
         # self.activepiece.translation += translation
         # self.activepiece.rotation += rotation
         newpoints = self.activepiece.points
@@ -243,6 +251,8 @@ class TetrisBoard(object):
             # newpoints = oldpoints
         # Draw the piece
         self.board[newpoints[0,:],newpoints[1,:]] = self.activepiece.piece + 1
+        if lockpiece:
+            self.newpiece()
         # for x,y,_ in self.activepiece.points:
         #     self.board[x,y] = -1
         # newpoints = move @ self.activepiece.points.T
@@ -316,6 +326,7 @@ class TetrisBoard(object):
         #     draw_on_grid(self.screen, p[1] + self.activepiece.offsety, p[0] + self.activepiece.offsetx, self.blockwidth, self.blockborder, self.activepiece.color, [0,0,0])
         # mpl.image.imsave('tetris-board-frame-{}.png'.format(self.total_frames), self.screen)
         cv2.imshow('Tetris', self.screen)
+        # if self.total_frames % 20 == 0:
         cv2.waitKey(1)
 
     def tick(self, inp):
@@ -325,7 +336,7 @@ class TetrisBoard(object):
         if self.step_counter == 11 - self.level:
             self.step_counter = 0
             inp[2] = True # You are now pressing down.
-            print("Dropping...")
+            # print("Dropping...")
         # transform = np.eye(3)
         # for button, move in zip(inp, TetrisBoard.affineMoves):
         #     if button:
@@ -338,4 +349,6 @@ class TetrisBoard(object):
 tb = TetrisBoard()
 
 for i in range(120):
-   tb.tick([True, False, False, False, False])
+   tb.tick([True, True, True, True, True])
+   if(tb.gameover):
+       break
