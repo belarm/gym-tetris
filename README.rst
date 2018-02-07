@@ -1,6 +1,18 @@
 What started as a fork is now a complete rewrite. Naturally.
 
 
+to get some output, try:
+
+python3 tetris_engine.py
+
+Note that this will thrash the hell out of your CPU and write > 200 images to your disk. Also, the convolved screen is yellow, and I'm not sure why yet.
+
+
+
+
+
+Old README:
+
 gym-tetris
 ******
 
