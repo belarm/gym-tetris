@@ -4,9 +4,12 @@
 # Released under a "Simplified BSD" license
 
 import numpy as np
+# import numba
+# from numba import jit
+# from scipy.ndimage import convolve
 # import cv2
-import matplotlib as mpl
-import matplotlib.pyplot as plt
+# import matplotlib as mpl
+# import matplotlib.pyplot as plt
 from collections import namedtuple
 
 def draw_on_grid(grid, x, y, width, border, maincolor, outlinecolor):
@@ -75,6 +78,7 @@ class TetrisPiece(object):
         self.rotation = 0
 
     @property
+    # @jit
     def points(self):
         return TetrisPiece.rotations[self.piece][self.rotation % 4] @ TetrisPiece.pieces[self.piece] + self.translation
 
@@ -190,7 +194,7 @@ class TetrisBoard(object):
         # print("Updated {} blocks".format(count))
         # plt.imshow(self.screen)
         # plt.show()
-        mpl.image.imsave('tetris-board-frame-{:03}.png'.format(self.total_frames), self.screen)
+        # mpl.image.imsave('tetris-board-frame-{:03}.png'.format(self.total_frames), self.screen)
         # self.oldscreen = np.copy(self.screen)
         # cv2.imshow('Tetris', self.screen)
         # if self.total_frames % 20 == 0:
@@ -210,60 +214,69 @@ class TetrisBoard(object):
 
 
 
-
-tb = TetrisBoard()
-
-input_mapping = {
-    -1: np.array([False, False, False, False, False]),
-    81: np.array([True, False, False, False, False]),
-    83: np.array([False, True, False, False, False]),
-    122: np.array([False, False, True, False, False]),
-    120: np.array([False, False, False, True, False]),
-    84: np.array([False, False, False, False, True]),
-}
-
-
-def convolve(screen, imgfilter, stride, padding):
-    # print(screen.shape)
-    # newscreen = np.pad(screen, [(1,1),(1,1),(0,0)], 'constant')
-    d0 = imgfilter.shape[0]
-    d1 = imgfilter.shape[1]
-    padded = np.pad(
-        screen,
-        ((padding,padding),(padding,padding),(0,0)),
-        'constant'
-        )
-    edgeloss = (imgfilter.shape[0:2] - np.array([1,1]))/2 - np.array([padding, padding])
-    # edgeloss = edgeloss.astype(np.int)
-    newimage = np.zeros(np.array(screen.shape[0:2] - edgeloss.astype(np.int)))
-    for x in range(padded.shape[1] - d1 -1 ):
-        for y in range(padded.shape[0] - d0 - 1):
-            newimage[y, x] = np.sum(imgfilter * padded[y:y+d0,x:x+d1,:])
-    return newimage
-
-
-
-# for i in range(120):
-keypress = 84
-imgfilter = np.full((5,5,3), 1/75)
-while(True):
-#     # move = np.array([False, False, False, False, False])
-#     # print(keypress)
-    move = np.copy(input_mapping.get(keypress, np.array([False, False, False, False, False])))
-#     # print("Move: {}".format(move))
-#     # button = np.random.choice(np.arange(5))
-#     # move[buttona] = True
-#     move = np.array([False, False, False, False, False])
-    screen = tb.tick(move)
-    convolved = convolve(screen, imgfilter, None, 2)
-    mpl.image.imsave('tetris-board-convolved-{:03}.png'.format(tb.total_frames), convolved)
-
-    # cv2.showimage
 #
-    if tb.gameover:
-        break
-
-    # tb.tick([True, True, True, True, True]) # PRESS ALL THE BUTTONS!
-    # if(tb.gameover or keypress == 27):
-        # break
-# cv2.destroyAllWindows()
+# tb = TetrisBoard()
+#
+# input_mapping = {
+#     -1: np.array([False, False, False, False, False]),
+#     81: np.array([True, False, False, False, False]),
+#     83: np.array([False, True, False, False, False]),
+#     122: np.array([False, False, True, False, False]),
+#     120: np.array([False, False, False, True, False]),
+#     84: np.array([False, False, False, False, True]),
+# }
+#
+# # @jit
+# def convolve_old(screen, imgfilter, stride, padding):
+#     # print(screen.shape)
+#     # newscreen = np.pad(screen, [(1,1),(1,1),(0,0)], 'constant')
+#     d0 = imgfilter.shape[0]
+#     d1 = imgfilter.shape[1]
+#     padded = np.pad(
+#         screen,
+#         ((padding,padding),(padding,padding),(0,0)),
+#         'constant'
+#         )
+#     edgeloss = (imgfilter.shape[0:2] - np.array([1,1]))/2 - np.array([padding, padding])
+#     # edgeloss = edgeloss.astype(np.int)
+#     newimage = np.zeros(np.array(screen.shape[0:2] - edgeloss.astype(np.int)))
+#     for x in range(padded.shape[1] - d1 -1 ):
+#         for y in range(padded.shape[0] - d0 - 1):
+#             newimage[y, x] = np.sum(imgfilter * padded[y:y+d0,x:x+d1,:])
+#     return newimage
+#
+#
+#
+# # for i in range(120):
+# keypress = 84
+# imgfilter = np.full((5,5,3), 1/(5*5*3))
+# imgfilters = []
+# for j in range(5):
+#     layer = []
+#     for i in range(10):
+#         f =  np.random.random_sample([5,5,1])
+#         f /= np.sum(f)
+#         layer.append(f)
+#     imgfilters.append(layer)
+# while(True):
+#     move = np.copy(input_mapping.get(keypress, np.array([False, False, False, False, False])))
+#     screen = tb.tick(move)
+#     convolved = []
+#     # lastlayer = [screen] * 5
+#     thislayer = []
+#     for i in imgfilters[0]:
+#         # print(i.shape)
+#         thislayer.append(convolve(screen, i, mode='nearest')[1:-1,1:-1,1])
+#     # for layer in imgfilters:
+#         # thislayer = []
+#         # for f, img in zip(layer, lastlayer):
+#         # convolved.append(np.concatenate(thislayer, axis=1))
+#         # lastlayer = thislayer
+#     # cv2.imshow('Tetris', convolved)
+#     # if self.total_frames % 20 == 0:
+#     # cv2.waitKey(1)
+#
+#     mpl.image.imsave('tetris-board-convolved-{:03}.png'.format(tb.total_frames), np.concatenate(thislayer, axis=0))
+#
+#     if tb.gameover:
+#         break
